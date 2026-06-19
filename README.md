@@ -56,8 +56,6 @@ Las siguientes etapas del proyecto contemplan la incorporación de técnicas ava
 * Modelado de temas mediante LDA (Latent Dirichlet Allocation).
 * Descubrimiento automático de temas con BERTopic.
 * Detección de explosiones temáticas mediante el algoritmo de Kleinberg.
-* Redes de coautoría y colaboración científica.
-* Redes de coocurrencia de palabras clave.
 * Dashboards interactivos utilizando Plotly y JavaScript.
 * Visualizaciones dinámicas e interactivas para exploración de datos.
 * Análisis predictivo de tendencias científicas.
