@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de Análisis Bibliométrico y Limpieza de Datos Científicos con Python">
+    <title>Ciudades Digitales e Inteligentes - Análisis Bibliométrico</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-bg: #ecf0f1;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background-color: #ffffff;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -5%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        header .content {
+            position: relative;
+            z-index: 1;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        header .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            margin-bottom: 1.5rem;
+        }
+
+        header .tagline {
+            font-size: 0.95rem;
+            opacity: 0.85;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        /* Navigation */
+        nav {
+            background-color: var(--primary-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        nav a:hover {
+            color: var(--secondary-color);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--secondary-color);
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Sections */
+        section {
+            padding: 4rem 2rem;
+            margin: 0;
+        }
+
+        section h2 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+            padding-bottom: 1rem;
+        }
+
+        section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--secondary-color);
+            border-radius: 2px;
+        }
+
+        /* Alternating section backgrounds */
+        section:nth-child(odd) {
+            background-color: #ffffff;
+        }
+
+        section:nth-child(even) {
+            background-color: var(--light-bg);
+        }
+
+        /* Hero section */
+        .hero {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        /* Description section */
+        .description {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 3rem;
+        }
+
+        .description p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border-top: 4px solid var(--secondary-color);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .feature-card h3 {
+            color: var(--secondary-color);
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+            line-height: 1.7;
+        }
+
+        /* Technologies Grid */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .tech-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid var(--accent-color);
+        }
+
+        .tech-card h3 {
+            color: var(--accent-color);
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .tech-card p {
+            color: var(--text-light);
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        /* Functionality List */
+        .functionality-list {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .functionality-list ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .functionality-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--light-bg);
+            border-radius: 6px;
+            transition: background 0.3s ease;
+        }
+
+        .functionality-list li:hover {
+            background: #d5e8f7;
+        }
+
+        .functionality-list li::before {
+            content: '✓';
+            color: var(--success-color);
+            font-weight: bold;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+            margin-top: 0.2rem;
+        }
+
+        .functionality-list li span {
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* Roadmap Section */
+        .roadmap {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .roadmap-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .roadmap-item {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-left: 4px solid var(--secondary-color);
+            border-radius: 6px;
+        }
+
+        .roadmap-item h4 {
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .roadmap-item p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 3rem 2rem;
+            margin-top: 3rem;
+        }
+
+        footer .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            text-align: left;
+        }
+
+        footer h4 {
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+        }
+
+        footer a {
+            color: #ecf0f1;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+            color: var(--secondary-color);
+        }
+
+        footer .footer-bottom {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 2rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+
+            header .subtitle {
+                font-size: 1rem;
+            }
+
+            section h2 {
+                font-size: 1.8rem;
+            }
+
+            nav ul {
+                gap: 1rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        section {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .feature-card, .tech-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="content">
+            <h1>🏙️ Ciudades Digitales e Inteligentes</h1>
+            <p class="subtitle">Sistema de Análisis Bibliométrico y Limpieza de Datos Científicos</p>
+            <p class="tagline">
+                Transformación, análisis y visualización de datos bibliométricos obtenidos de bases de datos científicas como Scopus para entender las dinámicas de la investigación en ciudades inteligentes
+            </p>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav>
+        <ul>
+            <li><a href="#proyecto">Proyecto</a></li>
+            <li><a href="#objetivo">Objetivo</a></li>
+            <li><a href="#tecnologias">Tecnologías</a></li>
+            <li><a href="#funcionalidades">Funcionalidades</a></li>
+            <li><a href="#futuro">Desarrollo Futuro</a></li>
+            <li><a href="#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+
+    <!-- Proyecto Section -->
+    <section id="proyecto">
+        <div class="container">
+            <h2>📊 Acerca del Proyecto</h2>
+            <div class="description">
+                <p>
+                    Este proyecto desarrolla un <strong>sistema integral de limpieza, procesamiento y análisis bibliométrico</strong> de información científica obtenida desde la base de datos Scopus. Su propósito es transformar grandes volúmenes de datos sin procesar en información estructurada y análisis significativos.
+                </p>
+                <p>
+                    La investigación se centra en el <strong>análisis de publicaciones relacionadas con ciudades inteligentes, transformación digital urbana y geopolítica del conocimiento en Iberoamérica</strong> durante los últimos años, permitiendo identificar tendencias emergentes y actores clave en el desarrollo de estas temáticas.
+                </p>
+                <p>
+                    El sistema implementado elimina registros duplicados, corrige valores faltantes, normaliza palabras clave, transforma variables numéricas y organiza la información en <strong>estructuras de datos eficientes</strong> para facilitar análisis profundos y visualizaciones significativas.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Objetivo Section -->
+    <section id="objetivo">
+        <div class="container">
+            <h2>🎯 Objetivo Principal</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>🧹 Limpieza de Datos</h3>
+                    <p>Preparación rigurosa de datos bibliométricos eliminando inconsistencias, duplicados y valores faltantes para garantizar calidad analítica.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🔄 Transformación</h3>
+                    <p>Estructuración y reorganización de información en formatos útiles y accesibles mediante procesamiento avanzado de datos.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📈 Análisis</h3>
+                    <p>Identificación de patrones, tendencias, correlaciones y relaciones significativas en la investigación científica.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📊 Visualización</h3>
+                    <p>Presentación clara, intuitiva e interactiva de hallazgos para facilitar la comprensión de datos complejos.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tecnologías Section -->
+    <section id="tecnologias">
+        <div class="container">
+            <h2>💻 Tecnologías y Herramientas</h2>
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h3>🐍 Python</h3>
+                    <p>Lenguaje principal del proyecto por su flexibilidad, facilidad de aprendizaje y amplio ecosistema de herramientas para ciencia de datos, análisis estadístico y minería de información.</p>
+                </div>
+                <div class="tech-card">
+                    <h3>📦 Pandas</h3>
+                    <p>Biblioteca principal para manipulación y análisis de datos. Permite cargar archivos CSV desde Scopus y organizar información en DataFrames para procesamiento eficiente.</p>
+                </div>
+                <div class="tech-card">
+                    <h3>🔢 NumPy</h3>
+                    <p>Herramientas para procesamiento numérico de alto rendimiento. Realiza cálculos estadísticos, operaciones matemáticas y transformaciones de datos necesarias para análisis rigurosos.</p>
+                </div>
+                <div class="tech-card">
+                    <h3>📉 Matplotlib</h3>
+                    <p>Generación de visualizaciones científicas que representan gráficamente la evolución temporal, tendencias de investigación e indicadores bibliométricos clave.</p>
+                </div>
+                <div class="tech-card">
+                    <h3>🔍 Collections</h3>
+                    <p>Módulo mediante la clase Counter para realizarconteos automáticos de frecuencia. Fundamental para identificar palabras clave y temas más utilizados en la investigación.</p>
+                </div>
+                <div class="tech-card">
+                    <h3>📝 Regular Expressions</h3>
+                    <p>Biblioteca Re para limpieza y normalización de texto. Elimina caracteres especiales, corrige inconsistencias en palabras clave y estandariza formatos de información.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Funcionalidades Section -->
+    <section id="funcionalidades">
+        <div class="container">
+            <h2>✨ Funcionalidades Implementadas</h2>
+            <div class="functionality-list">
+                <ul>
+                    <li><span>Limpieza y normalización de datos bibliográficos</span></li>
+                    <li><span>Eliminación de registros duplicados</span></li>
+                    <li><span>Tratamiento de valores faltantes</span></li>
+                    <li><span>Procesamiento y limpieza de palabras clave</span></li>
+                    <li><span>Identificación de temas de investigación predominantes</span></li>
+                    <li><span>Análisis de autores más productivos</span></li>
+                    <li><span>Identificación de autores más citados</span></li>
+                    <li><span>Análisis de revistas con mayor producción científica</span></li>
+                    <li><span>Estudio de tendencias temporales de publicación</span></li>
+                    <li><span>Detección preliminar de temas emergentes</span></li>
+                    <li><span>Exportación automática de resultados en formato CSV</span></li>
+                    <li><span>Generación de visualizaciones bibliométricas</span></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Desarrollo Futuro Section -->
+    <section id="futuro">
+        <div class="container">
+            <h2>🚀 Desarrollo Futuro</h2>
+            <p style="text-align: center; color: var(--text-light); margin-bottom: 2rem;">
+                Las siguientes etapas del proyecto contemplan la incorporación de técnicas avanzadas de análisis bibliométrico e inteligencia artificial:
+            </p>
+            <div class="roadmap">
+                <div class="roadmap-items">
+                    <div class="roadmap-item">
+                        <h4>🧠 LDA - Modelado de Temas</h4>
+                        <p>Latent Dirichlet Allocation para descubrimiento automático de temas latentes en textos científicos.</p>
+                    </div>
+                    <div class="roadmap-item">
+                        <h4>🤖 BERTopic</h4>
+                        <p>Técnicas avanzadas de procesamiento de lenguaje natural para descubrimiento dinámico de temas.</p>
+                    </div>
+                    <div class="roadmap-item">
+                        <h4>📊 Algoritmo de Kleinberg</h4>
+                        <p>Detección de explosiones temáticas e identificación de períodos de actividad investigativa intensa.</p>
+                    </div>
+                    <div class="roadmap-item">
+                        <h4>📈 Dashboards Interactivos</h4>
+                        <p>Visualizaciones dinámicas e interactivas utilizando Plotly y JavaScript para exploración de datos.</p>
+                    </div>
+                    <div class="roadmap-item">
+                        <h4>🔮 Análisis Predictivo</h4>
+                        <p>Modelos de machine learning para predicción de tendencias científicas futuras.</p>
+                    </div>
+                    <div class="roadmap-item">
+                        <h4>🗣️ Procesamiento NLP</h4>
+                        <p>Integración completa de técnicas avanzadas de procesamiento de lenguaje natural.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contacto Section -->
+    <section id="contacto">
+        <div class="container">
+            <h2>📧 Contacto y Recursos</h2>
+            <div style="background: white; padding: 2rem; border-radius: 8px; text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);">
+                <p style="font-size: 1.1rem; margin-bottom: 2rem; color: var(--text-dark);">
+                    Para más información, acceso al código fuente y documentación completa, visita el repositorio en GitHub:
+                </p>
+                <div class="hero-buttons">
+                    <a href="https://github.com/IsmaelF-O/Ciudades_Digitales_e_Inteligentes" class="btn btn-primary" target="_blank">
+                        📌 Repositorio GitHub
+                    </a>
+                    <a href="https://github.com/IsmaelF-O" class="btn btn-secondary" target="_blank">
+                        👤 Perfil del Desarrollador
+                    </a>
+                </div>
+                <p style="margin-top: 2rem; color: var(--text-light); font-size: 0.95rem;">
+                    Este proyecto busca servir como una <strong>plataforma reproducible</strong> para el estudio de la estructura, evolución e impacto de la producción científica, combinando bibliometría, ciencia de datos e inteligencia artificial.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div>
+                <h4>📊 Proyecto</h4>
+                <p>Sistema integral de análisis bibliométrico enfocado en ciudades digitales e inteligentes.</p>
+            </div>
+            <div>
+                <h4>🛠️ Tecnologías</h4>
+                <ul style="list-style: none;">
+                    <li><a href="#">Python</a></li>
+                    <li><a href="#">Pandas & NumPy</a></li>
+                    <li><a href="#">Matplotlib</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>🔗 Enlaces</h4>
+                <ul style="list-style: none;">
+                    <li><a href="https://github.com/IsmaelF-O/Ciudades_Digitales_e_Inteligentes" target="_blank">GitHub</a></li>
+                    <li><a href="https://github.com/IsmaelF-O" target="_blank">Desarrollador</a></li>
+                </ul>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Proyecto Ciudades Digitales e Inteligentes</p>
+                <p>Desarrollado con dedicación al análisis científico y la transformación digital</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
